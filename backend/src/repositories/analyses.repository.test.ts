@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { Pool } from "pg";
 import { createPool } from "../db/pool.js";
-import { insertAnalysis } from "./analyses.repository.js";
+import { findAnalysesByDays, insertAnalysis } from "./analyses.repository.js";
 
 describe("insertAnalysis", () => {
   let pool: Pool;
@@ -74,5 +74,68 @@ describe("insertAnalysis", () => {
       [record.id],
     );
     expect(result.rows[0]?.limit_min).toBeNull();
+  });
+});
+
+describe("findAnalysesByDays", () => {
+  let pool: Pool;
+  const insertedIds: number[] = [];
+
+  beforeAll(() => {
+    pool = createPool(process.env.DATABASE_URL!);
+  });
+
+  afterEach(async () => {
+    if (insertedIds.length > 0) {
+      await pool.query("DELETE FROM analyses WHERE id = ANY($1)", [
+        insertedIds,
+      ]);
+      insertedIds.length = 0;
+    }
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
+  it("retorna apenas análises dentro da janela de dias, mais recente primeiro", async () => {
+    const now = Date.now();
+    const withinWindow = await insertAnalysis(pool, {
+      paramKey: "ph",
+      value: 7,
+      dateUtcIso: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      compliant: true,
+      limitMin: 5,
+      limitMax: 9,
+    });
+    const olderInsideWindow = await insertAnalysis(pool, {
+      paramKey: "ph",
+      value: 6,
+      dateUtcIso: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      compliant: true,
+      limitMin: 5,
+      limitMax: 9,
+    });
+    const outsideWindow = await insertAnalysis(pool, {
+      paramKey: "ph",
+      value: 8,
+      dateUtcIso: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      compliant: true,
+      limitMin: 5,
+      limitMax: 9,
+    });
+    insertedIds.push(withinWindow.id, olderInsideWindow.id, outsideWindow.id);
+
+    const records = await findAnalysesByDays(pool, 7);
+
+    expect(records.map((r) => r.id)).toEqual([
+      withinWindow.id,
+      olderInsideWindow.id,
+    ]);
+  });
+
+  it("retorna array vazio quando não há análises no período", async () => {
+    const records = await findAnalysesByDays(pool, 7);
+    expect(records).toEqual([]);
   });
 });

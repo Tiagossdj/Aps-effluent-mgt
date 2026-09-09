@@ -1,11 +1,14 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
+import type { DaysQuery } from "../schemas/common.schema.js";
+import { daysQueryJsonSchema, parseDays } from "../schemas/common.schema.js";
 import type { CreateAnalysisBody } from "../schemas/analyses.schema.js";
 import {
   analysisResponseJsonSchema,
   createAnalysisBodyJsonSchema,
+  listAnalysesResponseJsonSchema,
 } from "../schemas/analyses.schema.js";
-import { createAnalysis } from "../services/analyses.service.js";
+import { createAnalysis, listAnalyses } from "../services/analyses.service.js";
 
 /**
  * Registra as rotas de análises laboratoriais. Recebe o `Pool` já
@@ -47,6 +50,24 @@ export function analysesController(pool: Pool) {
         });
 
         reply.status(201).send(analysis);
+      },
+    );
+
+    app.get<{ Querystring: DaysQuery }>(
+      "/analyses",
+      {
+        schema: {
+          summary:
+            "Lista as análises dos últimos 7, 30 ou 90 dias, mais recente primeiro",
+          querystring: daysQueryJsonSchema,
+          response: {
+            200: listAnalysesResponseJsonSchema,
+          },
+        },
+      },
+      async (request) => {
+        const days = parseDays(request.query.days);
+        return listAnalyses(pool, days);
       },
     );
   };

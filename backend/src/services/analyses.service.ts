@@ -1,8 +1,14 @@
 import type { Pool } from "pg";
 import { evaluateCompliance } from "../domain/compliance.js";
 import type { ParamKey } from "../domain/parameters.js";
-import { insertAnalysis } from "../repositories/analyses.repository.js";
-import type { AnalysisDto } from "../schemas/analyses.schema.js";
+import {
+  findAnalysesByDays,
+  insertAnalysis,
+} from "../repositories/analyses.repository.js";
+import type {
+  AnalysisDto,
+  ListAnalysesResponse,
+} from "../schemas/analyses.schema.js";
 
 export interface CreateAnalysisInput {
   paramKey: ParamKey;
@@ -38,5 +44,28 @@ export async function createAnalysis(
     value: record.value,
     date: record.date,
     compliant: record.compliant,
+  };
+}
+
+/**
+ * Lista as análises dos últimos `days` dias, mais recente primeiro.
+ */
+export async function listAnalyses(
+  pool: Pool,
+  days: 7 | 30 | 90,
+): Promise<ListAnalysesResponse> {
+  const records = await findAnalysesByDays(pool, days);
+
+  const data: AnalysisDto[] = records.map((record) => ({
+    id: `AN-${record.id}`,
+    paramKey: record.paramKey,
+    value: record.value,
+    date: record.date,
+    compliant: record.compliant,
+  }));
+
+  return {
+    data,
+    meta: { days, count: data.length },
   };
 }

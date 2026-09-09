@@ -25,6 +25,16 @@ export const analysisResponseSchema = z.object({
 
 export type AnalysisDto = z.infer<typeof analysisResponseSchema>;
 
+export const listAnalysesResponseSchema = z.object({
+  data: z.array(analysisResponseSchema),
+  meta: z.object({
+    days: z.union([z.literal(7), z.literal(30), z.literal(90)]),
+    count: z.number(),
+  }),
+});
+
+export type ListAnalysesResponse = z.infer<typeof listAnalysesResponseSchema>;
+
 /**
  * `target: "draft-07"` porque o AJV embutido no Fastify (via
  * @fastify/ajv-compiler) só resolve o meta-schema draft-07 por padrão —
@@ -38,5 +48,10 @@ export const createAnalysisBodyJsonSchema = z.toJSONSchema(
 
 export const analysisResponseJsonSchema = z.toJSONSchema(
   analysisResponseSchema,
+  { target: "draft-07" },
+);
+
+export const listAnalysesResponseJsonSchema = z.toJSONSchema(
+  listAnalysesResponseSchema,
   { target: "draft-07" },
 );

@@ -202,3 +202,90 @@ describe("POST /analyses", () => {
     expect(spec.paths).toHaveProperty("/analyses");
   });
 });
+
+describe("GET /analyses", () => {
+  let pool: Pool;
+
+  beforeAll(() => {
+    pool = createPool(process.env.DATABASE_URL!);
+  });
+
+  afterEach(async () => {
+    await pool.query("DELETE FROM analyses");
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
+  it("lista análises dos últimos N dias, mais recente primeiro", async () => {
+    const app = await buildApp(baseEnv(), pool);
+
+    await app.inject({
+      method: "POST",
+      url: "/analyses",
+      payload: { paramKey: "ph", value: 7, date: "2026-09-01T09:00:00Z" },
+    });
+    await app.inject({
+      method: "POST",
+      url: "/analyses",
+      payload: { paramKey: "dqo", value: 268, date: "2026-09-03T09:00:00Z" },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/analyses?days=90",
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json<{
+      data: { paramKey: string; date: string }[];
+      meta: { days: number; count: number };
+    }>();
+    expect(body.meta).toEqual({ days: 90, count: 2 });
+    expect(body.data.map((a) => a.paramKey)).toEqual(["dqo", "ph"]);
+  });
+
+  it("responde com data vazio e count 0 quando não há análises no período", async () => {
+    const app = await buildApp(baseEnv(), pool);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/analyses?days=7",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      data: [],
+      meta: { days: 7, count: 0 },
+    });
+  });
+
+  it("responde 400 quando days está ausente", async () => {
+    const app = await buildApp(baseEnv(), pool);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/analyses",
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json<ApiErrorBody>().error.code).toBe(
+      "VALIDATION_ERROR",
+    );
+  });
+
+  it("responde 400 quando days não é 7, 30 ou 90", async () => {
+    const app = await buildApp(baseEnv(), pool);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/analyses?days=15",
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json<ApiErrorBody>().error.code).toBe(
+      "VALIDATION_ERROR",
+    );
+  });
+});

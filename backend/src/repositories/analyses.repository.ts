@@ -27,6 +27,16 @@ interface AnalysisRow {
   compliant: boolean;
 }
 
+function mapRow(row: AnalysisRow): AnalysisRecord {
+  return {
+    id: row.id,
+    paramKey: row.param_key,
+    value: Number(row.value),
+    date: fromNaiveUtcLiteral(row.date),
+    compliant: row.compliant,
+  };
+}
+
 /**
  * Única camada que insere análises no Postgres. Persiste também o
  * snapshot do limite usado na avaliação (`limit_min`/`limit_max`), para
@@ -55,11 +65,28 @@ export async function insertAnalysis(
     throw new Error("Inserção de análise não retornou nenhuma linha.");
   }
 
-  return {
-    id: row.id,
-    paramKey: row.param_key,
-    value: Number(row.value),
-    date: fromNaiveUtcLiteral(row.date),
-    compliant: row.compliant,
-  };
+  return mapRow(row);
+}
+
+/**
+ * Lista as análises dos últimos `days` dias, ordenadas por `date desc`
+ * (mais recente primeiro).
+ */
+export async function findAnalysesByDays(
+  pool: Pool,
+  days: 7 | 30 | 90,
+): Promise<AnalysisRecord[]> {
+  const cutoffIso = new Date(
+    Date.now() - days * 24 * 60 * 60 * 1000,
+  ).toISOString();
+
+  const result = await pool.query<AnalysisRow>(
+    `SELECT id, param_key, value, date, compliant
+     FROM analyses
+     WHERE date >= $1
+     ORDER BY date DESC`,
+    [toNaiveUtcLiteral(cutoffIso)],
+  );
+
+  return result.rows.map(mapRow);
 }

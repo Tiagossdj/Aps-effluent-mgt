@@ -3,10 +3,14 @@ import type { Pool } from "pg";
 
 vi.mock("../repositories/analyses.repository.js", () => ({
   insertAnalysis: vi.fn(),
+  findAnalysesByDays: vi.fn(),
 }));
 
-import { insertAnalysis } from "../repositories/analyses.repository.js";
-import { createAnalysis } from "./analyses.service.js";
+import {
+  findAnalysesByDays,
+  insertAnalysis,
+} from "../repositories/analyses.repository.js";
+import { createAnalysis, listAnalyses } from "./analyses.service.js";
 
 const pool = {} as Pool;
 
@@ -84,5 +88,57 @@ describe("createAnalysis", () => {
       pool,
       expect.objectContaining({ compliant: false, limitMax: 40 }),
     );
+  });
+});
+
+describe("listAnalyses", () => {
+  it("mapeia os registros para DTOs e monta o meta com days e count", async () => {
+    vi.mocked(findAnalysesByDays).mockResolvedValue([
+      {
+        id: 1000,
+        paramKey: "dqo",
+        value: 268,
+        date: "2026-09-03T09:00:00Z",
+        compliant: false,
+      },
+      {
+        id: 999,
+        paramKey: "ph",
+        value: 7,
+        date: "2026-09-02T09:00:00Z",
+        compliant: true,
+      },
+    ]);
+
+    const result = await listAnalyses(pool, 30);
+
+    expect(findAnalysesByDays).toHaveBeenCalledWith(pool, 30);
+    expect(result).toEqual({
+      data: [
+        {
+          id: "AN-1000",
+          paramKey: "dqo",
+          value: 268,
+          date: "2026-09-03T09:00:00Z",
+          compliant: false,
+        },
+        {
+          id: "AN-999",
+          paramKey: "ph",
+          value: 7,
+          date: "2026-09-02T09:00:00Z",
+          compliant: true,
+        },
+      ],
+      meta: { days: 30, count: 2 },
+    });
+  });
+
+  it("retorna data vazio e count 0 quando não há análises no período", async () => {
+    vi.mocked(findAnalysesByDays).mockResolvedValue([]);
+
+    const result = await listAnalyses(pool, 7);
+
+    expect(result).toEqual({ data: [], meta: { days: 7, count: 0 } });
   });
 });
