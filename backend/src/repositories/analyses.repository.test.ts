@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { Pool } from "pg";
 import { createPool } from "../db/pool.js";
 import {
+  clearAnalyses,
   findAlertsByDays,
   findAnalysesByDays,
   findKpisByDays,
@@ -80,6 +81,34 @@ describe("insertAnalysis", () => {
       [record.id],
     );
     expect(result.rows[0]?.limit_min).toBeNull();
+  });
+});
+
+describe("clearAnalyses", () => {
+  let pool: Pool;
+
+  beforeAll(() => {
+    pool = createPool(process.env.DATABASE_URL!);
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
+  it("remove todas as análises da tabela", async () => {
+    await insertAnalysis(pool, {
+      paramKey: "ph",
+      value: 7,
+      dateUtcIso: new Date().toISOString(),
+      compliant: true,
+      limitMin: 5,
+      limitMax: 9,
+    });
+
+    await clearAnalyses(pool);
+
+    const records = await findAnalysesByDays(pool, 90);
+    expect(records).toEqual([]);
   });
 });
 

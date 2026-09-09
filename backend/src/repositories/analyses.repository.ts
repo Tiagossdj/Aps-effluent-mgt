@@ -89,6 +89,14 @@ export async function insertAnalysis(
 }
 
 /**
+ * Remove todas as análises. Usado pelo seed de demonstração para tornar
+ * `pnpm seed` idempotente (repetir a execução não acumula duplicatas).
+ */
+export async function clearAnalyses(pool: Pool): Promise<void> {
+  await pool.query("DELETE FROM analyses");
+}
+
+/**
  * Lista as análises dos últimos `days` dias, ordenadas por `date desc`
  * (mais recente primeiro).
  */

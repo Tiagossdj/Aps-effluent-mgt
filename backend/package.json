@@ -14,7 +14,8 @@
     "lint:fix": "eslint . --fix",
     "migrate": "node-pg-migrate --envPath .env",
     "migrate:test": "node-pg-migrate --envPath .env.test",
-    "migrate:create": "node-pg-migrate create -j ts"
+    "migrate:create": "node-pg-migrate create -j ts",
+    "seed": "tsx src/seed/run.ts"
   },
   "keywords": [],
   "author": "",
