@@ -201,6 +201,41 @@ describe("POST /analyses", () => {
     const spec = response.json<{ paths: Record<string, unknown> }>();
     expect(spec.paths).toHaveProperty("/analyses");
   });
+
+  it("responde 403 com WRITE_DISABLED_IN_PRODUCTION quando NODE_ENV=production", async () => {
+    const app = await buildApp(baseEnv({ NODE_ENV: "production" }), pool);
+    const before = await pool.query<{ count: string }>(
+      "SELECT COUNT(*) FROM analyses",
+    );
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/analyses",
+      payload: { paramKey: "ph", value: 7 },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json<ApiErrorBody>().error.code).toBe(
+      "WRITE_DISABLED_IN_PRODUCTION",
+    );
+
+    const after = await pool.query<{ count: string }>(
+      "SELECT COUNT(*) FROM analyses",
+    );
+    expect(after.rows[0]?.count).toBe(before.rows[0]?.count);
+  });
+
+  it("continua funcionando em desenvolvimento (NODE_ENV=development)", async () => {
+    const app = await buildApp(baseEnv({ NODE_ENV: "development" }), pool);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/analyses",
+      payload: { paramKey: "ph", value: 7 },
+    });
+
+    expect(response.statusCode).toBe(201);
+  });
 });
 
 describe("GET /analyses", () => {

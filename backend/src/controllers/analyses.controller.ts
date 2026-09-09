@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { Pool } from "pg";
+import type { Env } from "../config/env.js";
 import type { DaysQuery } from "../schemas/common.schema.js";
 import { daysQueryJsonSchema, parseDays } from "../schemas/common.schema.js";
 import type { CreateAnalysisBody } from "../schemas/analyses.schema.js";
@@ -13,9 +14,11 @@ import { createAnalysis, listAnalyses } from "../services/analyses.service.js";
 /**
  * Registra as rotas de análises laboratoriais. Recebe o `Pool` já
  * configurado (ver src/app.ts) e o repassa até a Service — camada de
- * composição, sem regra de negócio.
+ * composição, sem regra de negócio. `nodeEnv` é usado só para bloquear
+ * escrita em produção (modo de demonstração pública) — não há sistema
+ * de autenticação envolvido.
  */
-export function analysesController(pool: Pool) {
+export function analysesController(pool: Pool, nodeEnv: Env["NODE_ENV"]) {
   return function registerAnalysesRoutes(app: FastifyInstance): void {
     app.post<{ Body: CreateAnalysisBody }>(
       "/analyses",
@@ -30,6 +33,17 @@ export function analysesController(pool: Pool) {
         },
       },
       async (request, reply) => {
+        if (nodeEnv === "production") {
+          reply.status(403).send({
+            error: {
+              message:
+                "Escrita desabilitada em produção — use POST /compliance/preview para testar valores sem persistir.",
+              code: "WRITE_DISABLED_IN_PRODUCTION",
+            },
+          });
+          return;
+        }
+
         const { paramKey, value } = request.body;
         const dateUtcIso = request.body.date ?? new Date().toISOString();
 

@@ -106,7 +106,7 @@ export async function buildApp(env: Env, pool: Pool): Promise<FastifyInstance> {
 
   await app.register(parametersController);
   await app.register(complianceController);
-  await app.register(analysesController(pool));
+  await app.register(analysesController(pool, env.NODE_ENV));
   await app.register(seriesController(pool));
   await app.register(kpisController(pool));
   await app.register(alertsController(pool));
