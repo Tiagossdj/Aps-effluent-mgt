@@ -37,6 +37,26 @@ function mapRow(row: AnalysisRow): AnalysisRecord {
   };
 }
 
+export interface SeriesPointRecord {
+  date: string;
+  value: number;
+  compliant: boolean;
+}
+
+interface SeriesPointRow {
+  value: string;
+  date: string;
+  compliant: boolean;
+}
+
+function mapSeriesPointRow(row: SeriesPointRow): SeriesPointRecord {
+  return {
+    date: fromNaiveUtcLiteral(row.date),
+    value: Number(row.value),
+    compliant: row.compliant,
+  };
+}
+
 /**
  * Única camada que insere análises no Postgres. Persiste também o
  * snapshot do limite usado na avaliação (`limit_min`/`limit_max`), para
@@ -89,4 +109,29 @@ export async function findAnalysesByDays(
   );
 
   return result.rows.map(mapRow);
+}
+
+/**
+ * Série temporal de um parâmetro nos últimos `days` dias, ordenada por
+ * `date asc` — necessário para o gráfico de linha desenhar da esquerda
+ * pra direita.
+ */
+export async function findSeriesByParamAndDays(
+  pool: Pool,
+  paramKey: ParamKey,
+  days: 7 | 30 | 90,
+): Promise<SeriesPointRecord[]> {
+  const cutoffIso = new Date(
+    Date.now() - days * 24 * 60 * 60 * 1000,
+  ).toISOString();
+
+  const result = await pool.query<SeriesPointRow>(
+    `SELECT value, date, compliant
+     FROM analyses
+     WHERE param_key = $1 AND date >= $2
+     ORDER BY date ASC`,
+    [paramKey, toNaiveUtcLiteral(cutoffIso)],
+  );
+
+  return result.rows.map(mapSeriesPointRow);
 }
