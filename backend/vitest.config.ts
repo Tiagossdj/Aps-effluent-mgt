@@ -17,6 +17,16 @@ export default defineConfig({
       reporter: ["text", "lcov", "html"],
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts", "src/test/**"],
+      // Threshold conservador sobre o agregado do projeto (não por
+      // arquivo) — falha `pnpm test -- --coverage` se a cobertura cair
+      // abaixo disso, sem travar contribuições legítimas com um número
+      // otimista demais.
+      thresholds: {
+        statements: 70,
+        branches: 70,
+        functions: 70,
+        lines: 70,
+      },
     },
   },
 });
