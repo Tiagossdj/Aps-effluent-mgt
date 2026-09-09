@@ -56,6 +56,15 @@ export const PARAMETERS = [
 
 export type ParamKey = (typeof PARAMETERS)[number]["key"];
 
+/**
+ * Tupla das 6 chaves válidas, no formato exigido por `z.enum()`. Fonte
+ * única para os schemas Zod que validam `paramKey` (parameters, analyses).
+ */
+export const PARAM_KEYS = PARAMETERS.map((p) => p.key) as [
+  ParamKey,
+  ...ParamKey[],
+];
+
 export function getParameter(key: ParamKey): (typeof PARAMETERS)[number] {
   const parameter = PARAMETERS.find((p) => p.key === key);
   if (!parameter) {

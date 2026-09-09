@@ -3,6 +3,8 @@ import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
+import type { Pool } from "pg";
+import { analysesController } from "./controllers/analyses.controller.js";
 import { parametersController } from "./controllers/parameters.controller.js";
 import type { Env } from "./config/env.js";
 
@@ -10,9 +12,10 @@ import type { Env } from "./config/env.js";
  * Monta a aplicação Fastify (CORS, rate limit, Swagger, error handler)
  * sem chamar `listen` — permite testar a aplicação completa via
  * `app.inject` e reaproveitar a mesma composição no processo real
- * (src/server.ts).
+ * (src/server.ts). O `Pool` é injetado por quem compõe a aplicação (ver
+ * src/db/pool.ts) e repassado às rotas que precisam do banco.
  */
-export async function buildApp(env: Env): Promise<FastifyInstance> {
+export async function buildApp(env: Env, pool: Pool): Promise<FastifyInstance> {
   const app = Fastify({
     logger: env.NODE_ENV !== "test",
   });
@@ -42,8 +45,10 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
     routePrefix: "/documentation",
   });
 
-  await app.register(parametersController);
-
+  // `setNotFoundHandler`/`setErrorHandler` precisam ser registrados antes
+  // dos controllers: o Fastify tira um "retrato" do contexto do plugin no
+  // momento do `register()`, então handlers definidos depois não alcançam
+  // rotas já registradas em contexto encapsulado.
   app.setNotFoundHandler((_request, reply) => {
     reply.status(404).send({
       error: {
@@ -94,6 +99,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
       },
     });
   });
+
+  await app.register(parametersController);
+  await app.register(analysesController(pool));
 
   return app;
 }

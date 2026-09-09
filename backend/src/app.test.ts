@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Pool } from "pg";
 import { buildApp } from "./app.js";
 import type { Env } from "./config/env.js";
+import { createPool } from "./db/pool.js";
 
 interface ApiErrorBody {
   error: {
@@ -22,9 +24,19 @@ function baseEnv(overrides: Partial<Env> = {}): Env {
 }
 
 describe("buildApp", () => {
+  let pool: Pool;
+
+  beforeAll(() => {
+    pool = createPool(process.env.DATABASE_URL!);
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
   describe("CORS", () => {
     it("reflete a origem configurada em FRONTEND_URL", async () => {
-      const app = await buildApp(baseEnv());
+      const app = await buildApp(baseEnv(), pool);
 
       const response = await app.inject({
         method: "GET",
@@ -38,7 +50,7 @@ describe("buildApp", () => {
     });
 
     it("nunca reflete a origem da requisição — sempre responde com a FRONTEND_URL fixa", async () => {
-      const app = await buildApp(baseEnv());
+      const app = await buildApp(baseEnv(), pool);
 
       const response = await app.inject({
         method: "GET",
@@ -54,7 +66,7 @@ describe("buildApp", () => {
 
   describe("Swagger", () => {
     it("expõe a especificação OpenAPI em /documentation/json", async () => {
-      const app = await buildApp(baseEnv());
+      const app = await buildApp(baseEnv(), pool);
 
       const response = await app.inject({
         method: "GET",
@@ -70,7 +82,7 @@ describe("buildApp", () => {
 
   describe("Not found handler", () => {
     it("responde 404 no formato de erro padrão para rotas inexistentes", async () => {
-      const app = await buildApp(baseEnv());
+      const app = await buildApp(baseEnv(), pool);
 
       const response = await app.inject({
         method: "GET",
@@ -86,7 +98,7 @@ describe("buildApp", () => {
 
   describe("Error handler", () => {
     it("responde 400 no formato padrão para erro de validação de schema", async () => {
-      const app = await buildApp(baseEnv());
+      const app = await buildApp(baseEnv(), pool);
       app.get(
         "/test/validation",
         {
@@ -113,7 +125,7 @@ describe("buildApp", () => {
     });
 
     it("responde 500 no formato padrão sem vazar detalhes internos do erro", async () => {
-      const app = await buildApp(baseEnv());
+      const app = await buildApp(baseEnv(), pool);
       app.get("/test/boom", () => {
         throw new Error("detalhe interno sensível: coluna secreta");
       });
@@ -135,7 +147,7 @@ describe("buildApp", () => {
 
   describe("Rate limit", () => {
     it("responde 429 no formato padrão ao exceder RATE_LIMIT_MAX", async () => {
-      const app = await buildApp(baseEnv({ RATE_LIMIT_MAX: 1 }));
+      const app = await buildApp(baseEnv({ RATE_LIMIT_MAX: 1 }), pool);
       app.get("/test/ping", () => ({ ok: true }));
 
       const first = await app.inject({ method: "GET", url: "/test/ping" });

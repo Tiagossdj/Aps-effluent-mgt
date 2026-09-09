@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Pool } from "pg";
 import { buildApp } from "../app.js";
 import type { Env } from "../config/env.js";
+import { createPool } from "../db/pool.js";
 import { PARAMETERS } from "../domain/parameters.js";
 
 function baseEnv(overrides: Partial<Env> = {}): Env {
@@ -16,8 +18,18 @@ function baseEnv(overrides: Partial<Env> = {}): Env {
 }
 
 describe("GET /parameters", () => {
+  let pool: Pool;
+
+  beforeAll(() => {
+    pool = createPool(process.env.DATABASE_URL!);
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
   it("responde 200 com os 6 parâmetros monitorados e seus limites CONAMA 430/2011", async () => {
-    const app = await buildApp(baseEnv());
+    const app = await buildApp(baseEnv(), pool);
 
     const response = await app.inject({ method: "GET", url: "/parameters" });
 
@@ -26,7 +38,7 @@ describe("GET /parameters", () => {
   });
 
   it("documenta a rota no Swagger", async () => {
-    const app = await buildApp(baseEnv());
+    const app = await buildApp(baseEnv(), pool);
 
     const response = await app.inject({
       method: "GET",

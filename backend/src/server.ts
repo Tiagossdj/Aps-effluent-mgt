@@ -2,6 +2,7 @@ import { pathToFileURL } from "node:url";
 import { config } from "dotenv";
 import { buildApp } from "./app.js";
 import { loadEnv } from "./config/env.js";
+import { createPool } from "./db/pool.js";
 
 /**
  * Ponto de entrada do processo Node do backend: carrega o `.env`, valida
@@ -11,7 +12,8 @@ import { loadEnv } from "./config/env.js";
 export async function start(): Promise<void> {
   config({ quiet: true });
   const env = loadEnv(process.env);
-  const app = await buildApp(env);
+  const pool = createPool(env.DATABASE_URL);
+  const app = await buildApp(env, pool);
 
   try {
     await app.listen({ port: env.PORT });
