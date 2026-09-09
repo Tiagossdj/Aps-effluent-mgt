@@ -12,5 +12,11 @@ export default defineConfig({
     // meio de outro, causando falhas intermitentes. Desativar o
     // paralelismo entre arquivos torna a suíte determinística.
     fileParallelism: false,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov", "html"],
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.test.ts", "src/test/**"],
+    },
   },
 });
