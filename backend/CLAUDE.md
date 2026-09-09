@@ -53,7 +53,9 @@ Controller → Service → Repository → PostgreSQL
   orquestra chamadas ao Repository.
 - **Repository** (`src/repositories/`): única camada que toca o banco.
 - **Schemas** (`src/schemas/`): validação Zod de entrada/saída, convertidos
-  para JSON Schema (via `zod-to-json-schema`) para Fastify e Swagger.
+  para JSON Schema via `z.toJSONSchema()` (nativo do Zod v4) para Fastify
+  e Swagger. (`zod-to-json-schema` foi descartado na Fase 5: seus tipos
+  TypeScript ainda assumem Zod v3 e não compilam contra o Zod v4 instalado.)
 
 ## Banco de dados
 - Coluna de data: `TIMESTAMP` (sem timezone) — não usar `TIMESTAMPTZ`.

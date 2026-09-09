@@ -3,6 +3,7 @@ import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
+import { parametersController } from "./controllers/parameters.controller.js";
 import type { Env } from "./config/env.js";
 
 /**
@@ -40,6 +41,8 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   await app.register(swaggerUi, {
     routePrefix: "/documentation",
   });
+
+  await app.register(parametersController);
 
   app.setNotFoundHandler((_request, reply) => {
     reply.status(404).send({
