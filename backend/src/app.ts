@@ -4,6 +4,7 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 import type { Pool } from "pg";
+import { alertsController } from "./controllers/alerts.controller.js";
 import { analysesController } from "./controllers/analyses.controller.js";
 import { kpisController } from "./controllers/kpis.controller.js";
 import { parametersController } from "./controllers/parameters.controller.js";
@@ -106,6 +107,7 @@ export async function buildApp(env: Env, pool: Pool): Promise<FastifyInstance> {
   await app.register(analysesController(pool));
   await app.register(seriesController(pool));
   await app.register(kpisController(pool));
+  await app.register(alertsController(pool));
 
   return app;
 }

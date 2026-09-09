@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { Pool } from "pg";
 import { createPool } from "../db/pool.js";
 import {
+  findAlertsByDays,
   findAnalysesByDays,
   findKpisByDays,
   findSeriesByParamAndDays,
@@ -296,5 +297,81 @@ describe("findKpisByDays", () => {
       parametersInAlert: 0,
       lastCollectionAt: null,
     });
+  });
+});
+
+describe("findAlertsByDays", () => {
+  let pool: Pool;
+  const insertedIds: number[] = [];
+
+  beforeAll(() => {
+    pool = createPool(process.env.DATABASE_URL!);
+  });
+
+  afterEach(async () => {
+    if (insertedIds.length > 0) {
+      await pool.query("DELETE FROM analyses WHERE id = ANY($1)", [
+        insertedIds,
+      ]);
+      insertedIds.length = 0;
+    }
+  });
+
+  afterAll(async () => {
+    await pool.end();
+  });
+
+  it("retorna apenas análises não conformes dentro da janela, mais recente primeiro", async () => {
+    const now = Date.now();
+    const nonCompliantNewer = await insertAnalysis(pool, {
+      paramKey: "dqo",
+      value: 268,
+      dateUtcIso: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      compliant: false,
+      limitMin: null,
+      limitMax: 250,
+    });
+    const nonCompliantOlder = await insertAnalysis(pool, {
+      paramKey: "ph",
+      value: 12,
+      dateUtcIso: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      compliant: false,
+      limitMin: 5,
+      limitMax: 9,
+    });
+    const compliant = await insertAnalysis(pool, {
+      paramKey: "ss",
+      value: 50,
+      dateUtcIso: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      compliant: true,
+      limitMin: null,
+      limitMax: 100,
+    });
+    const outsideWindow = await insertAnalysis(pool, {
+      paramKey: "og",
+      value: 60,
+      dateUtcIso: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      compliant: false,
+      limitMin: null,
+      limitMax: 50,
+    });
+    insertedIds.push(
+      nonCompliantNewer.id,
+      nonCompliantOlder.id,
+      compliant.id,
+      outsideWindow.id,
+    );
+
+    const records = await findAlertsByDays(pool, 7);
+
+    expect(records.map((r) => r.id)).toEqual([
+      nonCompliantNewer.id,
+      nonCompliantOlder.id,
+    ]);
+  });
+
+  it("retorna array vazio quando não há não conformidades no período", async () => {
+    const records = await findAlertsByDays(pool, 7);
+    expect(records).toEqual([]);
   });
 });

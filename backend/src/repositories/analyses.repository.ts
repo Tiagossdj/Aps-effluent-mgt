@@ -111,6 +111,29 @@ export async function findAnalysesByDays(
   return result.rows.map(mapRow);
 }
 
+/**
+ * Lista as análises não conformes dos últimos `days` dias, ordenadas por
+ * `date desc` (mais recente primeiro) — usado em `GET /alerts`.
+ */
+export async function findAlertsByDays(
+  pool: Pool,
+  days: 7 | 30 | 90,
+): Promise<AnalysisRecord[]> {
+  const cutoffIso = new Date(
+    Date.now() - days * 24 * 60 * 60 * 1000,
+  ).toISOString();
+
+  const result = await pool.query<AnalysisRow>(
+    `SELECT id, param_key, value, date, compliant
+     FROM analyses
+     WHERE date >= $1 AND NOT compliant
+     ORDER BY date DESC`,
+    [toNaiveUtcLiteral(cutoffIso)],
+  );
+
+  return result.rows.map(mapRow);
+}
+
 export interface KpisRecord {
   totalAnalyses: number;
   compliantCount: number;
