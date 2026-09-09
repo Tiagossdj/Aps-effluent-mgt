@@ -205,3 +205,107 @@ assumir da memória.
 10. GET /alerts
 11. Seed de demonstração
 12. Cobertura de testes + CI
+
+# Adendo — Fase 13: Modo de demonstração pública (deploy)
+
+## Contexto da decisão
+
+O projeto vai para deploy público antes da apresentação na feira de
+tecnologia (15-17 deste mês): backend no Render (free tier), frontend no
+Vercel, banco no Neon (Postgres free, não expira, só hiberna o compute
+quando ocioso).
+
+Isso muda o cenário de risco em relação ao que valia rodando só localmente:
+
+1. **O dashboard vai mostrar os dados do seed** (90 dias, 6 parâmetros,
+   com não conformidades deliberadas em DQO e Óleos&Graxas) — são os dados
+   "reais" da demonstração, e não podem ser poluídos por quem for testar
+   o sistema publicamente.
+2. **Queremos permitir que um visitante teste o sistema** — insira um
+   valor hipotético de algum parâmetro e veja se seria conforme ou não,
+   como prova de que o web service funciona — **sem que isso grave nada
+   no banco**. É uma demonstração de funcionamento, não um cadastro real.
+3. Autenticação continua fora de escopo (decisão já tomada desde o início
+   do projeto) — não vamos resolver isso com login, e sim restringindo o
+   que cada ambiente pode fazer.
+
+A raiz do problema: hoje `POST /analyses` faz as duas coisas ao mesmo
+tempo (avalia conformidade E persiste). Precisamos separar essas duas
+responsabilidades em dois endpoints com propósitos e permissões diferentes.
+
+## O que implementar
+
+### 1. Novo endpoint: `POST /compliance/preview`
+
+Calcula conformidade usando a mesma função pura já existente
+(`evaluateCompliance`, em `src/domain/compliance.ts`) — **sem nunca
+chamar o Repository, sem tocar o banco**. Reaproveitar a função existente,
+não reimplementar a regra em lugar nenhum (nem aqui, nem no frontend) —
+o domínio de negócio continua tendo uma única fonte de verdade.
+
+Request:
+```json
+{ "paramKey": "dqo", "value": 268 }
+```
+
+Response `200`:
+```json
+{ "compliant": false, "limitMin": null, "limitMax": 250 }
+```
+
+Validação de `paramKey`/`value` segue o mesmo padrão Zod já usado em
+`POST /analyses` — `paramKey` fora dos 6 keys válidos → `400`
+`VALIDATION_ERROR`, mesmo tratamento já dado a `/series`.
+
+Este endpoint fica **disponível em todos os ambientes**, inclusive
+produção — é seguro por natureza, porque não escreve nada.
+
+### 2. `POST /analyses` (o que já existe) — desabilitar em produção
+
+Este é o endpoint que persiste de verdade e alimenta `/analyses`,
+`/series`, `/kpis`, `/alerts`. Ele deve continuar funcionando normalmente
+em desenvolvimento (é como o `pnpm seed` e qualquer teste futuro vão
+inserir dado), mas **recusar requisições quando `NODE_ENV=production`**.
+
+No Controller, adicionar a checagem antes de chamar o Service:
+
+```
+se NODE_ENV === "production":
+  responder 403 com o envelope de erro padrão,
+  código sugerido: "WRITE_DISABLED_IN_PRODUCTION"
+```
+
+Isso não exige sistema de autenticação novo — é uma restrição de
+ambiente, coerente com a decisão já tomada de manter o projeto sem login.
+
+### 3. Testes esperados
+
+- `compliance.controller.test.ts` (ou nome equivalente): confirma que
+  `/compliance/preview` retorna o resultado correto para casos de
+  fronteira já cobertos em `compliance.test.ts` (ex.: pH 9 conforme,
+  temperatura 40 não conforme) e que **nenhuma linha é inserida na
+  tabela `analyses`** ao chamar esse endpoint (checar contagem antes/depois
+  no teste de integração).
+- Teste específico confirmando que `POST /analyses` com
+  `NODE_ENV=production` retorna `403` com o código
+  `WRITE_DISABLED_IN_PRODUCTION`, e que com `NODE_ENV=development`/`test`
+  continua funcionando como antes (não pode quebrar o `pnpm seed` nem os
+  testes existentes de `POST /analyses`).
+
+### 4. Frontend (referência, não é este repositório)
+
+A tela de "testar valores" do dashboard deve chamar `POST /compliance/preview`
+e exibir o resultado (`compliant`, `limitMax`/`limitMin`) num componente
+isolado — sem re-buscar ou alterar os dados dos outros endpoints
+(`/analyses`, `/kpis`, `/series`, `/alerts`), que continuam mostrando
+sempre o dado real do seed.
+
+## Fora de escopo desta fase
+
+- Não implementar autenticação/login.
+- Não adicionar rate limit diferenciado por endpoint — o rate limit
+  global já configurado na Fase 4 continua valendo para todos, incluindo
+  o novo `/compliance/preview`.
+- Não modificar o schema da tabela `analyses` — este adendo não altera
+  nada do banco, só adiciona uma rota nova e uma checagem de ambiente
+  na rota existente.
