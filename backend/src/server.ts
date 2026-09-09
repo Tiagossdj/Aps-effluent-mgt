@@ -16,7 +16,7 @@ export async function start(): Promise<void> {
   const app = await buildApp(env, pool);
 
   try {
-    await app.listen({ port: env.PORT });
+    await app.listen({ port: env.PORT, host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);
     process.exit(1);
