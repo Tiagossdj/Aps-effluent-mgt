@@ -111,6 +111,65 @@ export async function findAnalysesByDays(
   return result.rows.map(mapRow);
 }
 
+export interface KpisRecord {
+  totalAnalyses: number;
+  compliantCount: number;
+  parametersInAlert: number;
+  lastCollectionAt: string | null;
+}
+
+interface KpisRow {
+  total: string;
+  compliant_count: string;
+  alert_params: string;
+  last_collection: string | null;
+}
+
+function mapKpisRow(row: KpisRow): KpisRecord {
+  return {
+    totalAnalyses: Number(row.total),
+    compliantCount: Number(row.compliant_count),
+    parametersInAlert: Number(row.alert_params),
+    lastCollectionAt: row.last_collection
+      ? fromNaiveUtcLiteral(row.last_collection)
+      : null,
+  };
+}
+
+/**
+ * Agrega os KPIs dos últimos `days` dias em uma única query. `alert_params`
+ * conta `param_key` **distintos** com ao menos uma não conformidade no
+ * período (não é o total de análises não conformes). Sobre um conjunto
+ * vazio, `COUNT` retorna `0` e `MAX` retorna `NULL` naturalmente — o caso
+ * "sem dados no período" não precisa de tratamento especial.
+ */
+export async function findKpisByDays(
+  pool: Pool,
+  days: 7 | 30 | 90,
+): Promise<KpisRecord> {
+  const cutoffIso = new Date(
+    Date.now() - days * 24 * 60 * 60 * 1000,
+  ).toISOString();
+
+  const result = await pool.query<KpisRow>(
+    `SELECT
+       COUNT(*) AS total,
+       COUNT(*) FILTER (WHERE compliant) AS compliant_count,
+       COUNT(DISTINCT param_key) FILTER (WHERE NOT compliant) AS alert_params,
+       MAX(date) AS last_collection
+     FROM analyses
+     WHERE date >= $1`,
+    [toNaiveUtcLiteral(cutoffIso)],
+  );
+
+  const row = result.rows[0];
+  if (!row) {
+    throw new Error("Consulta de KPIs não retornou nenhuma linha.");
+  }
+
+  return mapKpisRow(row);
+}
+
 /**
  * Série temporal de um parâmetro nos últimos `days` dias, ordenada por
  * `date asc` — necessário para o gráfico de linha desenhar da esquerda
