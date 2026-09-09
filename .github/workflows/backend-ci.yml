@@ -17,7 +17,9 @@ defaults:
     working-directory: backend
 
 env:
-  NODE_VERSION: "25"
+  # vitest@5 declara engines "^22.12.0 || ^24.0.0 || >=26.0.0" — Node 25 é
+  # release ímpar (non-LTS) e fica fora dessa faixa. 24 é a LTS coberta.
+  NODE_VERSION: "24"
   PNPM_VERSION: "10.29.2"
 
 jobs:
