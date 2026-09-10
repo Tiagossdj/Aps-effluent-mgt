@@ -156,7 +156,7 @@ ser removida do monorepo.
 - [x] Fase 0 — Tipos e cliente de API
 - [x] Fase 1 — Layout base (topbar + sidebar-nav)
 - [x] Fase 2 — KPI cards
-- [ ] Fase 3 — Parameter cards
+- [x] Fase 3 — Parameter cards
 - [ ] Fase 4 — Trend chart
 - [ ] Fase 5 — Alerts feed
 - [ ] Fase 6 — Analyses table
