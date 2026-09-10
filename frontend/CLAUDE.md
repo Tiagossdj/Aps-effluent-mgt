@@ -155,7 +155,7 @@ ser removida do monorepo.
 ## Status do plano de fases
 - [x] Fase 0 — Tipos e cliente de API
 - [x] Fase 1 — Layout base (topbar + sidebar-nav)
-- [ ] Fase 2 — KPI cards
+- [x] Fase 2 — KPI cards
 - [ ] Fase 3 — Parameter cards
 - [ ] Fase 4 — Trend chart
 - [ ] Fase 5 — Alerts feed
