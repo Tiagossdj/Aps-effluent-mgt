@@ -5,6 +5,8 @@ import { KpiCardsSkeleton } from "@/components/dashboard/kpi-cards-skeleton";
 import { ParameterCardsSection } from "@/components/dashboard/parameter-cards-section";
 import { ParameterCardsSkeleton } from "@/components/dashboard/parameter-cards-skeleton";
 import { Topbar } from "@/components/dashboard/topbar";
+import { TrendChartSection } from "@/components/dashboard/trend-chart-section";
+import { TrendChartSkeleton } from "@/components/dashboard/trend-chart-skeleton";
 import { DEFAULT_DAYS, parseDaysParam } from "@/lib/days";
 
 export default async function DashboardPage({
@@ -31,6 +33,10 @@ export default async function DashboardPage({
 
         <Suspense fallback={<ParameterCardsSkeleton />}>
           <ParameterCardsSection days={days} />
+        </Suspense>
+
+        <Suspense fallback={<TrendChartSkeleton />}>
+          <TrendChartSection days={days} />
         </Suspense>
 
         <footer className="border-t border-border pt-6 text-xs text-muted-foreground">

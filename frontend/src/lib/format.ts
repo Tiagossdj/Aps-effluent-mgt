@@ -55,3 +55,19 @@ export function formatParameterValue(parameter: Parameter, value: number): strin
 export function formatMaxLabel(parameter: Parameter): string {
   return parameter.unit ? `${parameter.max} ${parameter.unit}` : `${parameter.max}`;
 }
+
+// Rótulo curto (dia/mês) para eixo X e tooltip do gráfico de evolução — sem
+// hora, diferente de `formatLastCollection`, para não poluir o eixo em
+// períodos de 90 dias.
+export function formatSeriesDate(iso: string): string {
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: TIMEZONE,
+    day: "2-digit",
+    month: "2-digit",
+  }).formatToParts(new Date(iso));
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${get("day")}/${get("month")}`;
+}

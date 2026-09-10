@@ -157,7 +157,7 @@ ser removida do monorepo.
 - [x] Fase 1 — Layout base (topbar + sidebar-nav)
 - [x] Fase 2 — KPI cards
 - [x] Fase 3 — Parameter cards
-- [ ] Fase 4 — Trend chart
+- [x] Fase 4 — Trend chart
 - [ ] Fase 5 — Alerts feed
 - [ ] Fase 6 — Analyses table
 - [ ] Fase 7 — Tela de teste público (compliance preview)
