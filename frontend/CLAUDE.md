@@ -13,8 +13,9 @@ negócio, não calcula conformidade — apenas exibe o que a API retorna.
   `design.md`, PARE e pergunte — não invente layout, cor, endpoint ou
   comportamento.
 - Não deixe código temporário, mock ou TODO na implementação definitiva.
-- Commits: Conventional Commits em inglês, uma mudança lógica por commit,
-  não comite automaticamente por edição pequena.
+- Commits: Conventional Commits **100% em inglês — título e corpo, sem
+  exceção**. Uma mudança lógica por commit, não comite automaticamente por
+  edição pequena.
 - Primeiro apresente o plano de fases completo e aguarde minha confirmação
   antes de implementar a primeira fase.
 
@@ -89,6 +90,37 @@ recharts, consultar o Context7 para confirmar a sintaxe da versão instalada
 ## Commits (Conventional Commits, em inglês)
 `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `style`, `perf`.
 Exemplo: `feat(dashboard): add trend chart consuming /series endpoint`
+
+**Título e corpo 100% em inglês, sem exceção** — já aconteceu desvio
+(corpo em português em commits desta migração, corrigido via rebase antes
+do merge). Não escrever nenhuma frase em português na mensagem de commit,
+nem no título nem no corpo.
+
+O repositório tem um hook local `.git/hooks/commit-msg` que remove
+automaticamente as linhas `Co-Authored-By: Claude` e `Claude-Session:` de
+toda mensagem de commit. Isso é intencional (configuração do usuário, não
+do projeto) — não é necessário evitar gerar essas linhas na mensagem nem
+tentar removê-las manualmente; o hook já cuida disso.
+
+## Armadilhas de CSS conhecidas
+`backdrop-filter`, `filter`, `transform`, `perspective` e `will-change`
+apontando para qualquer um desses criam um *containing block* para
+descendentes `position: fixed` — o `fixed` deixa de ser relativo à
+viewport e passa a ser relativo à caixa desse ancestral. Isso já causou
+um bug real: a `Topbar` usa `bg-background/85 backdrop-blur` no `<header>`
+e continha a `SidebarNav` (aside fixo + drawer mobile, ambos `fixed`),
+fazendo a sidebar "encolher" para o retângulo do header em vez de ocupar
+a borda esquerda da tela inteira.
+
+Solução aplicada (ver `components/dashboard/sidebar-nav.tsx`): renderizar
+o elemento `fixed` via `createPortal` para `document.body`, escapando do
+containing block do ancestral. Usar `useSyncExternalStore` (não
+`useState` + `useEffect`) para detectar o mount no cliente sem disparar o
+lint `react-hooks/set-state-in-effect` já configurado no projeto.
+
+Se esse padrão aparecer de novo (qualquer `fixed` aninhado dentro de um
+ancestral com `backdrop-filter`/`filter`/`transform`/`perspective`/
+`will-change`), aplicar a mesma solução de portal.
 
 ## Fora de escopo
 - Autenticação/login — não implementar se não foi pedido.
