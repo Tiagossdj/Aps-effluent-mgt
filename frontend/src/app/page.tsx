@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AlertsFeedSection } from "@/components/dashboard/alerts-feed-section";
 import { AlertsFeedSkeleton } from "@/components/dashboard/alerts-feed-skeleton";
+import { AnalysesTableSection } from "@/components/dashboard/analyses-table-section";
+import { AnalysesTableSkeleton } from "@/components/dashboard/analyses-table-skeleton";
 import { KpiCardsSection } from "@/components/dashboard/kpi-cards-section";
 import { KpiCardsSkeleton } from "@/components/dashboard/kpi-cards-skeleton";
 import { ParameterCardsSection } from "@/components/dashboard/parameter-cards-section";
@@ -47,6 +49,10 @@ export default async function DashboardPage({
             <AlertsFeedSection days={days} />
           </Suspense>
         </div>
+
+        <Suspense fallback={<AnalysesTableSkeleton />}>
+          <AnalysesTableSection days={days} />
+        </Suspense>
 
         <footer className="border-t border-border pt-6 text-xs text-muted-foreground">
           Dados de demonstração · Limites de lançamento conforme Resolução CONAMA nº 430/2011
