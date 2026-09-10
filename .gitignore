@@ -41,7 +41,7 @@ next-env.d.ts
 # Vercel 
 .vercel
 
-../design-reference/
+design-reference/
 
 # Claude 
 .claudeignore

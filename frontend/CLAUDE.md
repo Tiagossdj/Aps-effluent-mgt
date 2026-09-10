@@ -167,4 +167,4 @@ ser removida do monorepo.
 - [x] Fase 5 — Alerts feed
 - [x] Fase 6 — Analyses table
 - [x] Fase 7 — Tela de teste público (compliance preview)
-- [ ] Fase 8 — Integração final e limpeza
+- [x] Fase 8 — Integração final e limpeza
