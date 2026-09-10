@@ -26,10 +26,10 @@ export function AnalysesTable({ rows }: Props) {
           Nenhuma análise registrada no período selecionado.
         </p>
       ) : (
-        <div className="scroll-fino mt-5 -mx-1 overflow-x-auto px-1 pb-2">
+        <div className="mt-5 -mx-1 max-h-[750px] overflow-auto px-1 pb-2">
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-border text-left">
+              <tr className="sticky top-0 z-10 bg-surface border-b border-border text-left">
                 {["Data", "Parâmetro", "Valor medido", "Limite", "Status"].map((h) => (
                   <th
                     key={h}
