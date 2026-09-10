@@ -66,6 +66,65 @@
 :root {
   --radius: 0.875rem;
 
+  /*
+   * Tema claro — derivado automaticamente do tema escuro (abaixo, em `.dark`)
+   * invertendo a luminosidade oklch de cada token (L' = 1 - L), mantendo
+   * chroma/hue. Sem auditoria formal de contraste WCAG; ver `.dark` para os
+   * valores de origem e o hex aproximado de cada cor.
+   */
+  --background: oklch(0.8056 0.0498 267.74);
+  --foreground: oklch(0.0446 0.0253 99.53);
+
+  --surface: oklch(0.7288 0.0538 269.13);
+  --surface-2: oklch(0.771 0.0544 266.81);
+
+  --card: oklch(0.7288 0.0538 269.13);
+  --card-foreground: oklch(0.0446 0.0253 99.53);
+  --popover: oklch(0.7288 0.0538 269.13);
+  --popover-foreground: oklch(0.0446 0.0253 99.53);
+
+  --primary: oklch(0.2526 0.0942 193.58);
+  --primary-foreground: oklch(0.8056 0.0498 267.74);
+
+  --secondary: oklch(0.6485 0.0632 264.24);
+  --secondary-foreground: oklch(0.0446 0.0253 99.53);
+
+  --muted: oklch(0.6485 0.0632 264.24);
+  --muted-foreground: oklch(0.3661 0.0405 254.66);
+
+  --accent: oklch(0.2526 0.0942 193.58);
+  --accent-foreground: oklch(0.8056 0.0498 267.74);
+
+  --destructive: oklch(0.3384 0.1935 21.68);
+  --destructive-foreground: oklch(0.0446 0.0253 99.53);
+
+  --warning: oklch(0.3153 0.1557 39.58);
+  --warning-foreground: oklch(0.8056 0.0498 267.74);
+
+  --success: oklch(0.2526 0.0942 193.58);
+  --success-foreground: oklch(0.8056 0.0498 267.74);
+
+  --border: oklch(0.575 0.0528 253.97 / 45%);
+  --input: oklch(0.575 0.0528 253.97 / 60%);
+  --ring: oklch(0.2526 0.0942 193.58);
+
+  --chart-1: oklch(0.2526 0.0942 193.58);
+  --chart-2: oklch(0.3153 0.1557 39.58);
+  --chart-3: oklch(0.575 0.0528 253.97);
+  --chart-4: oklch(0.1898 0.1435 79.25);
+  --chart-5: oklch(0.3384 0.1935 21.68);
+
+  --sidebar: oklch(0.771 0.0544 266.81);
+  --sidebar-foreground: oklch(0.0446 0.0253 99.53);
+  --sidebar-primary: oklch(0.2526 0.0942 193.58);
+  --sidebar-primary-foreground: oklch(0.8056 0.0498 267.74);
+  --sidebar-accent: oklch(0.6485 0.0632 264.24);
+  --sidebar-accent-foreground: oklch(0.0446 0.0253 99.53);
+  --sidebar-border: oklch(0.575 0.0528 253.97 / 45%);
+  --sidebar-ring: oklch(0.2526 0.0942 193.58);
+}
+
+.dark {
   --background: oklch(0.1944 0.0498 267.74); /* #0B132B */
   --foreground: oklch(0.9554 0.0253 99.53); /* #F4F1DE */
 

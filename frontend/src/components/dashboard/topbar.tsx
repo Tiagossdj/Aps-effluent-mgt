@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, FlaskConical } from "lucide-react";
+import { Building2, FlaskConical, Moon, Sun } from "lucide-react";
 import { CompliancePreviewDialog } from "./compliance-preview-dialog";
 import { SidebarNav } from "./sidebar-nav";
 import { VALID_DAYS } from "@/lib/days";
+import { useTheme } from "@/lib/theme";
 import type { Days } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ export function Topbar({ days }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [testOpen, setTestOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   function handleDaysChange(value: Days) {
     router.replace(`${pathname}?days=${value}`, { scroll: false });
@@ -41,6 +43,16 @@ export function Topbar({ days }: Props) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            aria-label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+            title={theme === "dark" ? "Tema claro" : "Tema escuro"}
+            onClick={toggleTheme}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border bg-surface text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+
           <button
             onClick={() => setTestOpen(true)}
             className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
