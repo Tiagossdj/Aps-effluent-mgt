@@ -19,7 +19,7 @@ const items = [
   { label: "Análises", icon: FlaskConical, disabled: true },
   { label: "Histórico", icon: History, disabled: true },
   { label: "Relatórios", icon: FileBarChart, disabled: true },
-  { label: "Configurações", icon: Settings },
+  { label: "Configurações", icon: Settings, disabled: true },
 ];
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
