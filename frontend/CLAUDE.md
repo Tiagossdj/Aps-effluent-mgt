@@ -49,6 +49,25 @@ lib/
   types.ts                  # tipos espelhando o contrato da API
 ```
 
+## Padrão de dados assíncronos por seção (fixado na Fase 2)
+Cada bloco do dashboard que busca dado da API (`KpiCards`, e a partir da
+Fase 3 também parameter cards, trend chart, alerts feed e analyses table)
+segue este padrão, para que a falha ou lentidão de um endpoint não
+derrube nem trave o dashboard inteiro:
+
+- Um Server Component "`*-section.tsx`" por bloco, responsável só por
+  chamar a função de `lib/api-client.ts` e tratar erro — nunca faz fetch
+  direto, sempre via `lib/api-client.ts`.
+- O componente de apresentação (`kpi-cards.tsx`, etc.) recebe os dados já
+  buscados/formatados via props — não sabe de onde vieram.
+- Em `page.tsx`, cada seção fica dentro do seu próprio `<Suspense
+  fallback={<XSkeleton />}>` — loading isolado por bloco, não um
+  `loading.tsx` de rota inteira.
+- Erro de fetch (`ApiError` ou qualquer outro) é capturado com `try/catch`
+  dentro do próprio `*-section.tsx` e renderizado como mensagem inline no
+  card — nunca propagado para um `error.tsx` de rota, que apagaria o
+  dashboard inteiro por causa de um único endpoint fora do ar.
+
 ## Contrato de dados esperado da API (ver CLAUDE.md do backend)
 - `GET /parameters` → lista dos 6 parâmetros com limites
 - `GET /analyses?days=7|30|90` → lista de análises no período (obrigatório, sem default)
