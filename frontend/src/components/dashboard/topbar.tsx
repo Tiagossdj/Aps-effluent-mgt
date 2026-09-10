@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2 } from "lucide-react";
+import { Building2, FlaskConical } from "lucide-react";
+import { CompliancePreviewDialog } from "./compliance-preview-dialog";
 import { SidebarNav } from "./sidebar-nav";
 import { VALID_DAYS } from "@/lib/days";
 import type { Days } from "@/lib/types";
@@ -14,6 +16,7 @@ type Props = {
 export function Topbar({ days }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+  const [testOpen, setTestOpen] = useState(false);
 
   function handleDaysChange(value: Days) {
     router.replace(`${pathname}?days=${value}`, { scroll: false });
@@ -21,6 +24,8 @@ export function Topbar({ days }: Props) {
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
+      <CompliancePreviewDialog open={testOpen} onOpenChange={setTestOpen} />
+
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <SidebarNav />
@@ -36,6 +41,14 @@ export function Topbar({ days }: Props) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={() => setTestOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+          >
+            <FlaskConical className="h-4 w-4" />
+            <span className="hidden sm:inline">Testar valores</span>
+          </button>
+
           <div className="hidden items-center rounded-lg border border-border bg-surface p-1 sm:flex">
             {VALID_DAYS.map((value) => (
               <button
