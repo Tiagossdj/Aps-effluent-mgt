@@ -16,9 +16,9 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { label: "Dashboard", icon: LayoutDashboard },
-  { label: "Análises", icon: FlaskConical },
-  { label: "Histórico", icon: History },
-  { label: "Relatórios", icon: FileBarChart },
+  { label: "Análises", icon: FlaskConical, disabled: true },
+  { label: "Histórico", icon: History, disabled: true },
+  { label: "Relatórios", icon: FileBarChart, disabled: true },
   { label: "Configurações", icon: Settings },
 ];
 
@@ -31,15 +31,22 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         return (
           <button
             key={item.label}
+            disabled={item.disabled}
+            title={item.disabled ? "Em breve" : undefined}
             onClick={() => {
               setActive(item.label);
+              if (item.label === "Dashboard") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
               onNavigate?.();
             }}
             className={cn(
               "group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors",
-              isActive
-                ? "bg-primary/12 text-primary"
-                : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+              item.disabled
+                ? "cursor-not-allowed opacity-50"
+                : isActive
+                  ? "bg-primary/12 text-primary"
+                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
             )}
           >
             <item.icon className={cn("h-4.5 w-4.5 shrink-0", isActive && "text-primary")} />
