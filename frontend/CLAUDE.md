@@ -132,3 +132,14 @@ Pasta temporária com o código exportado do protótipo Lovable (repositório
 `river-guard-ui`, que será descartado). Existe só para consulta durante a
 migração — depois que a UI estiver recriada em `frontend/`, esta pasta deve
 ser removida do monorepo.
+
+## Status do plano de fases
+- [x] Fase 0 — Tipos e cliente de API
+- [x] Fase 1 — Layout base (topbar + sidebar-nav)
+- [ ] Fase 2 — KPI cards
+- [ ] Fase 3 — Parameter cards
+- [ ] Fase 4 — Trend chart
+- [ ] Fase 5 — Alerts feed
+- [ ] Fase 6 — Analyses table
+- [ ] Fase 7 — Tela de teste público (compliance preview)
+- [ ] Fase 8 — Integração final e limpeza
