@@ -115,6 +115,12 @@ Exemplo: `feat(dashboard): add trend chart consuming /series endpoint`
 do merge). Não escrever nenhuma frase em português na mensagem de commit,
 nem no título nem no corpo.
 
+O commit que marca a fase como concluída na checklist da seção "Status
+do plano de fases" (abaixo) entra **junto** no mesmo commit `feat` da
+funcionalidade daquela fase — nunca como commit `docs` separado.
+Exemplo: um único `feat(dashboard): add trend chart with reference
+lines` já inclui tanto o código quanto o checkbox marcado no CLAUDE.md.
+
 O repositório tem um hook local `.git/hooks/commit-msg` que remove
 automaticamente as linhas `Co-Authored-By: Claude` e `Claude-Session:` de
 toda mensagem de commit. Isso é intencional (configuração do usuário, não
