@@ -56,6 +56,26 @@ export function formatMaxLabel(parameter: Parameter): string {
   return parameter.unit ? `${parameter.max} ${parameter.unit}` : `${parameter.max}`;
 }
 
+// Data/hora completa (dia/mês/ano + hora:min) para o feed de alertas — ao
+// contrário de `formatLastCollection`, inclui o ano porque o período pode
+// chegar a 90 dias e cruzar a virada do ano.
+export function formatAlertDateTime(iso: string): string {
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: TIMEZONE,
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(iso));
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+
+  return `${get("day")}/${get("month")}/${get("year")} ${get("hour")}:${get("minute")}`;
+}
+
 // Rótulo curto (dia/mês) para eixo X e tooltip do gráfico de evolução — sem
 // hora, diferente de `formatLastCollection`, para não poluir o eixo em
 // períodos de 90 dias.

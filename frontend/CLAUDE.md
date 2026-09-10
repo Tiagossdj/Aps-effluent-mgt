@@ -164,7 +164,7 @@ ser removida do monorepo.
 - [x] Fase 2 — KPI cards
 - [x] Fase 3 — Parameter cards
 - [x] Fase 4 — Trend chart
-- [ ] Fase 5 — Alerts feed
+- [x] Fase 5 — Alerts feed
 - [ ] Fase 6 — Analyses table
 - [ ] Fase 7 — Tela de teste público (compliance preview)
 - [ ] Fase 8 — Integração final e limpeza
